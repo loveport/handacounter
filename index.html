@@ -1,0 +1,539 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HANDA부스</title>
+
+  <!-- ✅ Firebase 스크립트: 중복 제거 및 순서 유지 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 1rem; background: #e6f2ff; }
+    h1 { text-align: center; margin-bottom: 1rem; }
+    nav { display: flex; justify-content: center; gap: 1rem; margin-bottom: 1.5rem; }
+    nav 
+button {
+  background-color: white;
+  color: #003366;
+  border: 1px solid #b3d9ff;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.1s ease, background-color 0.2s ease;
+}
+button:active {
+  transform: scale(0.96);
+  background-color: #d6ecff;
+}
+
+button:active {
+  transform: scale(0.96);
+  background-color: #d6ecff;
+}
+  touch-action: manipulation; padding: 0.5rem 1rem; font-size: 1rem; }
+    section { display: none; }
+    section.active { display: block; }
+    .form-group {
+      margin-bottom: 1rem;
+      width: 100%;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    input, select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.5rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .product-list, .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+    .product-card, .product {
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .product {
+      border: 1px solid #b3d9ff;
+      cursor: pointer;
+      transition: background-color 0.2s, box-shadow 0.2s;
+    }
+    .product:hover {
+      background-color: #f0f8ff;
+      box-shadow: 0 0 8px rgba(179, 217, 255, 0.5);
+    }
+    .product-card img, .product img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 5px;
+      margin-bottom: 0.5rem;
+    }
+    .btn-group { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+    .cart, .sales {
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-top: 1rem;
+    }
+    .cart-items {
+  max-height: 50vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.cart-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    .cart-controls 
+button {
+  background-color: white;
+  color: #003366;
+  border: 1px solid #b3d9ff;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.1s ease, background-color 0.2s ease;
+}
+button:active {
+  transform: scale(0.96);
+  background-color: #d6ecff;
+}
+
+button:active {
+  transform: scale(0.96);
+  background-color: #d6ecff;
+}
+  touch-action: manipulation; margin-left: 5px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+    th, td { border: 1px solid #ccc; padding: 0.5rem; }
+    th { background: #f0f0f0; }
+    .download-btn {
+      margin: 1rem 0;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+    }
+    
+button {
+  background-color: white;
+  color: #003366;
+  border: 1px solid #b3d9ff;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.1s ease, background-color 0.2s ease;
+}
+button:active {
+  transform: scale(0.96);
+  background-color: #d6ecff;
+}
+
+button:active {
+  transform: scale(0.96);
+  background-color: #d6ecff;
+}
+  touch-action: manipulation;
+      background-color: white;
+      color: #003366;
+      border: 1px solid #b3d9ff;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #f0f8ff;
+    }
+    button, .download-btn {
+      font-size: 1rem;
+      padding: 1rem;
+    }
+  
+  section { display: none; }
+  section.active { display: block; }
+</style>
+</head>
+<body>
+  <h1>HANDA부스</h1>
+  <nav>
+    <button onclick="showSection('manage')">상품 관리</button>
+    <button onclick="showSection('order')">주문 처리</button>
+    <button onclick="showSection('sales')">매출 관리</button>
+  </nav>
+
+  <section id="manage" class="active">
+    <div class="form-group"><label for="name">상품명</label><input type="text" id="name" /></div>
+    <div class="form-group"><label for="price">가격</label><input type="number" id="price" /></div>
+    <div class="form-group"><label for="category">카테고리</label><input type="text" id="category" /></div>
+    <div class="form-group"><label for="stock">재고 수량</label><input type="number" id="stock" /></div>
+    <div class="form-group"><label for="image">이미지</label><input type="file" id="image" accept="image/*" /></div>
+    <div class="form-group"><button onclick="addProduct()">상품 등록</button></div>
+    <div class="product-list" id="productList"></div>
+  </section>
+
+  <section id="order">
+    <div class="product-grid" id="productGrid"></div>
+    <div class="cart" id="cart">
+      <h2>장바구니</h2>
+      <div id="cartItems"></div>
+      <div class="cart-total" id="cartTotal">총합: 0원</div>
+      <div class="payment">
+        <button onclick="completeOrder('현금')">현금 결제</button>
+        <button onclick="completeOrder('계좌이체')">계좌이체</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="sales">
+    <div class="sales">
+      <h2>매출 내역</h2>
+      <button class="download-btn" onclick="downloadCSV()">CSV 다운로드</button>
+      <button class="download-btn" onclick="resetSales()">매출 초기화</button>
+      <div id="salesList"></div>
+      <h3>일별 매출 통계</h3>
+      <div id="dailyStats"></div>
+    </div>
+  </section>
+
+  <!-- ✅ JavaScript 로직 포함 -->
+  <script>
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBgtMaVNPSUQ3qQKu7Ted3KoZn_dgdxE4k",
+  authDomain: "handacounter.firebaseapp.com",
+  projectId: "handacounter",
+  storageBucket: "handacounter.appspot.com",
+  messagingSenderId: "68271064287",
+  appId: "1:68271064287:web:180813a3a6802b5b90956a"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+firebase.firestore().enablePersistence({synchronizeTabs: true})
+  .then(() => console.log("🔥 Firestore 오프라인 캐시 활성화"))
+  .catch(err => console.warn("❗오프라인 캐시 불가:", err.code));
+
+let products = [];
+let cart = [];
+let sales = JSON.parse(localStorage.getItem('sales') || '[]');
+let selectedProductIndex = null;
+
+function showSection(id) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'manage') 
+document.addEventListener("DOMContentLoaded", () => {
+  showSection('manage');
+});
+loadProductsFromFirestore();
+  if (id === 'order') renderOrder();
+  if (id === 'sales') renderSales();
+}
+
+function loadProductsFromFirestore() {
+  db.collection("products").get().then(snapshot => {
+    products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    localStorage.setItem('products', JSON.stringify(products));
+    renderProducts();
+    renderOrder();
+  });
+}
+
+function addProduct() {
+  const name = document.getElementById("name").value;
+  const price = parseInt(document.getElementById("price").value);
+  const category = document.getElementById("category").value;
+  const stock = parseInt(document.getElementById("stock").value);
+  const imageInput = document.getElementById("image");
+
+  if (!name || !price || !category || !stock) return alert("모든 항목을 입력해주세요");
+
+  const save = (imageUrl = '') => {
+    const product = { name, price, category, stock, imageUrl };
+
+    if (selectedProductIndex !== null) {
+      product.id = products[selectedProductIndex].id;
+      products[selectedProductIndex] = product;
+      db.collection('products').doc(product.id).set(product).then(() => {
+        localStorage.setItem('products', JSON.stringify(products));
+        selectedProductIndex = null;
+        clearForm();
+        
+document.addEventListener("DOMContentLoaded", () => {
+  showSection('manage');
+});
+loadProductsFromFirestore();
+      });
+    } else {
+      db.collection('products').add(product).then(docRef => {
+        product.id = docRef.id;
+        products.push(product);
+        localStorage.setItem('products', JSON.stringify(products));
+        clearForm();
+        
+document.addEventListener("DOMContentLoaded", () => {
+  showSection('manage');
+});
+loadProductsFromFirestore();
+      });
+    }
+  };
+
+  if (imageInput.files && imageInput.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      save(e.target.result);
+      imageInput.value = '';
+    };
+    reader.readAsDataURL(imageInput.files[0]);
+  } else {
+    save();
+  }
+}
+
+function renderProducts() {
+  const listEl = document.getElementById("productList");
+  listEl.innerHTML = '';
+  products.forEach((p, i) => {
+    const div = document.createElement("div");
+    div.className = "product-card";
+    div.innerHTML = `
+      <img src="${p.imageUrl || ''}" alt="${p.name}" />
+      <strong>${p.name}</strong><br/>${p.price}원<br/>카테고리: ${p.category}<br/>재고: ${p.stock}
+      <div class="btn-group">
+        <button onclick="editProduct(${i})">수정</button>
+        <button onclick="deleteProduct(${i})">삭제</button>
+      </div>`;
+    listEl.appendChild(div);
+  });
+}
+
+function renderOrder() {
+  const grid = document.getElementById("productGrid");
+  grid.innerHTML = '';
+
+  const grouped = {};
+  products.forEach(p => {
+    if (!grouped[p.category]) grouped[p.category] = [];
+    grouped[p.category].push(p);
+  });
+
+  Object.keys(grouped).forEach(category => {
+    const section = document.createElement("div");
+    section.innerHTML = `<h3>${category}</h3>`;
+    section.style.marginBottom = "1rem";
+
+    const gridGroup = document.createElement("div");
+    gridGroup.className = "product-grid";
+
+    grouped[category].forEach((p, i) => {
+      const div = document.createElement("div");
+      div.className = "product";
+      div.innerHTML = `
+        <img src="${p.imageUrl || ''}" />
+        <div>${p.name}</div>
+        <div>${p.price}원</div>
+        <div>재고: ${p.stock}</div>
+      `;
+      div.onclick = () => addToCart(products.indexOf(p));
+      gridGroup.appendChild(div);
+    });
+
+    section.appendChild(gridGroup);
+    grid.appendChild(section);
+  });
+}
+
+function addToCart(i) {
+  const p = products[i];
+  if (parseInt(p.stock) <= 0) return alert('재고 없음');
+  const item = cart.find(x => x.name === p.name);
+  if (item) {
+    if (item.qty < parseInt(p.stock)) item.qty++;
+  } else {
+    cart.push({ ...p, qty: 1 });
+  }
+  renderCart();
+}
+
+function renderCart() {
+  const box = document.getElementById('cartItems');
+  box.innerHTML = '';
+  let total = 0;
+  cart.forEach(item => {
+    total += item.qty * item.price;
+    box.innerHTML += `
+      <div class="cart-item">
+        <div>${item.name} x ${item.qty} = ${item.qty * item.price}원</div>
+        <div class="cart-controls">
+          <button onclick="updateQty('${item.name}',1)">+</button>
+          <button onclick="updateQty('${item.name}',-1)">-</button>
+        </div>
+      </div>
+    `;
+  });
+  document.getElementById('cartTotal').innerText = `총합: ${total.toLocaleString()}원`;
+}
+
+function updateQty(name, delta) {
+  const item = cart.find(i => i.name === name);
+  if (!item) return;
+  const stock = parseInt(products.find(p => p.name === name).stock);
+  item.qty += delta;
+  if (item.qty <= 0) cart = cart.filter(i => i.name !== name);
+  if (item.qty > stock) item.qty = stock;
+  renderCart();
+}
+
+function completeOrder(method) {
+  if (!cart.length) return alert('장바구니 비어있음');
+  const order = {
+    items: cart.map(item => ({ name: item.name, price: item.price, qty: item.qty })),
+    total: cart.reduce((sum, i) => sum + i.qty * i.price, 0),
+    method,
+    date: new Date().toISOString()
+  };
+  sales.push(order);
+  localStorage.setItem('sales', JSON.stringify(sales));
+  cart.forEach(i => {
+    const p = products.find(p => p.name === i.name);
+    p.stock = parseInt(p.stock) - i.qty;
+  });
+  localStorage.setItem('products', JSON.stringify(products));
+  cart = [];
+  renderCart();
+  renderOrder();
+  alert(`결제 완료 (${method})`);
+}
+
+function renderSales() {
+  sales = JSON.parse(localStorage.getItem('sales') || '[]');
+  const salesList = document.getElementById('salesList');
+  const dailyStats = document.getElementById('dailyStats');
+  salesList.innerHTML = '';
+  dailyStats.innerHTML = '';
+
+  if (!sales.length) {
+    salesList.innerHTML = '<p>매출 내역이 없습니다.</p>';
+    return;
+  }
+
+  const dayStats = {};
+
+  sales.slice().reverse().forEach(sale => {
+    const date = new Date(sale.date).toLocaleDateString();
+
+    if (!dayStats[date]) dayStats[date] = { total: 0, items: {} };
+    dayStats[date].total += sale.total;
+    sale.items.forEach(item => {
+      if (!dayStats[date].items[item.name]) dayStats[date].items[item.name] = 0;
+      dayStats[date].items[item.name] += item.qty;
+    });
+
+    const table = document.createElement('table');
+    table.innerHTML = `
+      <thead>
+        <tr><th colspan="4">${new Date(sale.date).toLocaleString()} - ${sale.method} - 총 ${sale.total.toLocaleString()}원</th></tr>
+        <tr><th>상품명</th><th>수량</th><th>단가</th><th>합계</th></tr>
+      </thead>
+      <tbody>
+        ${sale.items.map(item => `
+          <tr><td>${item.name}</td><td>${item.qty}</td><td>${item.price}</td><td>${item.qty * item.price}</td></tr>
+        `).join('')}
+      </tbody>`;
+    salesList.appendChild(table);
+  });
+
+  const statTable = document.createElement('table');
+  statTable.innerHTML = `
+    <thead><tr><th>날짜</th><th>총 매출</th><th>판매 상품</th></tr></thead>
+    <tbody>
+      ${Object.entries(dayStats).map(([date, data]) => {
+        const itemSummary = Object.entries(data.items)
+          .map(([name, qty]) => `${name}(${qty})`)
+          .join(', ');
+        return `<tr><td>${date}</td><td>${data.total.toLocaleString()}원</td><td>${itemSummary}</td></tr>`;
+      }).join('')}
+    </tbody>`;
+  dailyStats.appendChild(statTable);
+}
+
+function resetSales() {
+  if (confirm("매출 데이터를 초기화하시겠습니까?")) {
+    localStorage.removeItem("sales");
+    sales = [];
+    renderSales();
+    alert("매출이 초기화되었습니다.");
+  }
+}
+
+function downloadCSV() {
+  const rows = [["날짜", "결제수단", "상품명", "수량", "단가", "합계"]];
+  sales.forEach(sale => {
+    const date = new Date(sale.date).toLocaleString();
+    sale.items.forEach(item => {
+      rows.push([date, sale.method, item.name, item.qty, item.price, item.qty * item.price]);
+    });
+  });
+  const csv = rows.map(r => r.join(",")).join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "sales.csv";
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function editProduct(i) {
+  const p = products[i];
+  document.getElementById("name").value = p.name;
+  document.getElementById("price").value = p.price;
+  document.getElementById("category").value = p.category;
+  document.getElementById("stock").value = p.stock;
+  selectedProductIndex = i;
+}
+
+function deleteProduct(i) {
+  const id = products[i].id;
+  if (confirm('정말 삭제하시겠습니까?')) {
+    db.collection("products").doc(id).delete().then(() => {
+      products.splice(i, 1);
+      localStorage.setItem('products', JSON.stringify(products));
+      renderProducts();
+      renderOrder();
+    });
+  }
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  showSection('manage');
+});
+loadProductsFromFirestore();
+</script>
+</body>
+</html>
