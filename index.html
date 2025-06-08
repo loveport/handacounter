@@ -242,13 +242,12 @@ function showSection(id) {
   document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if (id === 'manage') 
-document.addEventListener("DOMContentLoaded", () => {
-  showSection('manage');
-});
-loadProductsFromFirestore();
   if (id === 'order') renderOrder();
   if (id === 'sales') renderSales();
 }
+
+
+function renderProducts() { console.log('renderProducts placeholder'); }
 
 function loadProductsFromFirestore() {
   db.collection("products").get().then(snapshot => {
@@ -279,10 +278,7 @@ function addProduct() {
         selectedProductIndex = null;
         clearForm();
         
-document.addEventListener("DOMContentLoaded", () => {
-  showSection('manage');
-});
-loadProductsFromFirestore();
+
       });
     } else {
       db.collection('products').add(product).then(docRef => {
@@ -291,10 +287,7 @@ loadProductsFromFirestore();
         localStorage.setItem('products', JSON.stringify(products));
         clearForm();
         
-document.addEventListener("DOMContentLoaded", () => {
-  showSection('manage');
-});
-loadProductsFromFirestore();
+
       });
     }
   };
@@ -415,9 +408,11 @@ function completeOrder(method) {
   };
   sales.push(order);
   localStorage.setItem('sales', JSON.stringify(sales));
+  db.collection("sales").add(order);
   cart.forEach(i => {
     const p = products.find(p => p.name === i.name);
     p.stock = parseInt(p.stock) - i.qty;
+    db.collection("products").doc(p.id).update({ stock: p.stock });
   });
   localStorage.setItem('products', JSON.stringify(products));
   cart = [];
@@ -426,57 +421,63 @@ function completeOrder(method) {
   alert(`결제 완료 (${method})`);
 }
 
+
 function renderSales() {
-  sales = JSON.parse(localStorage.getItem('sales') || '[]');
-  const salesList = document.getElementById('salesList');
-  const dailyStats = document.getElementById('dailyStats');
-  salesList.innerHTML = '';
-  dailyStats.innerHTML = '';
+  db.collection("sales").get().then(snapshot => {
+    sales = snapshot.docs.map(doc => doc.data());
+    const salesList = document.getElementById('salesList');
+    const dailyStats = document.getElementById('dailyStats');
+    salesList.innerHTML = '';
+    dailyStats.innerHTML = '';
 
-  if (!sales.length) {
-    salesList.innerHTML = '<p>매출 내역이 없습니다.</p>';
-    return;
-  }
+    if (!sales.length) {
+      salesList.innerHTML = '<p>매출 내역이 없습니다.</p>';
+      return;
+    }
 
-  const dayStats = {};
+    const dayStats = {};
+    sales.slice().reverse().forEach(sale => {
+      const date = new Date(sale.date).toLocaleDateString();
 
-  sales.slice().reverse().forEach(sale => {
-    const date = new Date(sale.date).toLocaleDateString();
+      if (!dayStats[date]) dayStats[date] = { total: 0, items: {} };
+      dayStats[date].total += sale.total;
+      sale.items.forEach(item => {
+        if (!dayStats[date].items[item.name]) dayStats[date].items[item.name] = 0;
+        dayStats[date].items[item.name] += item.qty;
+      });
 
-    if (!dayStats[date]) dayStats[date] = { total: 0, items: {} };
-    dayStats[date].total += sale.total;
-    sale.items.forEach(item => {
-      if (!dayStats[date].items[item.name]) dayStats[date].items[item.name] = 0;
-      dayStats[date].items[item.name] += item.qty;
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <thead>
+          <tr><th colspan="4">${new Date(sale.date).toLocaleString()} - ${sale.method} - 총 ${sale.total.toLocaleString()}원</th></tr>
+          <tr><th>상품명</th><th>수량</th><th>단가</th><th>합계</th></tr>
+        </thead>
+        <tbody>
+          ${sale.items.map(item => `
+            <tr><td>${item.name}</td><td>${item.qty}</td><td>${item.price}</td><td>${item.qty * item.price}</td></tr>
+          `).join('')}
+        </tbody>`;
+      salesList.appendChild(table);
     });
 
-    const table = document.createElement('table');
-    table.innerHTML = `
+    const statTable = document.createElement('table');
+    statTable.innerHTML = `
       <thead>
-        <tr><th colspan="4">${new Date(sale.date).toLocaleString()} - ${sale.method} - 총 ${sale.total.toLocaleString()}원</th></tr>
-        <tr><th>상품명</th><th>수량</th><th>단가</th><th>합계</th></tr>
+        <tr><th>날짜</th><th>총 매출</th><th>판매 상품</th></tr>
       </thead>
       <tbody>
-        ${sale.items.map(item => `
-          <tr><td>${item.name}</td><td>${item.qty}</td><td>${item.price}</td><td>${item.qty * item.price}</td></tr>
-        `).join('')}
-      </tbody>`;
-    salesList.appendChild(table);
+        ${Object.entries(dayStats).map(([date, data]) => {
+          const itemSummary = Object.entries(data.items)
+            .map(([name, qty]) => `${name}(${qty})`)
+            .join(', ');
+          return `<tr><td>${date}</td><td>${data.total.toLocaleString()}원</td><td>${itemSummary}</td></tr>`;
+        }).join('')}
+      </tbody>
+    `;
+    dailyStats.appendChild(statTable);
   });
-
-  const statTable = document.createElement('table');
-  statTable.innerHTML = `
-    <thead><tr><th>날짜</th><th>총 매출</th><th>판매 상품</th></tr></thead>
-    <tbody>
-      ${Object.entries(dayStats).map(([date, data]) => {
-        const itemSummary = Object.entries(data.items)
-          .map(([name, qty]) => `${name}(${qty})`)
-          .join(', ');
-        return `<tr><td>${date}</td><td>${data.total.toLocaleString()}원</td><td>${itemSummary}</td></tr>`;
-      }).join('')}
-    </tbody>`;
-  dailyStats.appendChild(statTable);
 }
+
 
 function resetSales() {
   if (confirm("매출 데이터를 초기화하시겠습니까?")) {
@@ -530,10 +531,109 @@ function deleteProduct(i) {
 }
 
 
+
+</script>
+
+<script>
+function showSection(id) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'manage') loadProductsFromFirestore();
+  if (id === 'order') renderOrder();
+  if (id === 'sales') renderSales();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   showSection('manage');
 });
-loadProductsFromFirestore();
 </script>
+
+
+<script>
+function renderProducts() { console.log('renderProducts placeholder'); }
+
+function loadProductsFromFirestore() {
+  const data = localStorage.getItem("products");
+  products = data ? JSON.parse(data) : [];
+  renderProducts();
+}
+
+function renderOrder() {
+  // placeholder or full definition if required
+  console.log("renderOrder called");
+}
+
+
+function renderSales() {
+  db.collection("sales").get().then(snapshot => {
+    sales = snapshot.docs.map(doc => doc.data());
+    const salesList = document.getElementById('salesList');
+    const dailyStats = document.getElementById('dailyStats');
+    salesList.innerHTML = '';
+    dailyStats.innerHTML = '';
+
+    if (!sales.length) {
+      salesList.innerHTML = '<p>매출 내역이 없습니다.</p>';
+      return;
+    }
+
+    const dayStats = {};
+    sales.slice().reverse().forEach(sale => {
+      const date = new Date(sale.date).toLocaleDateString();
+
+      if (!dayStats[date]) dayStats[date] = { total: 0, items: {} };
+      dayStats[date].total += sale.total;
+      sale.items.forEach(item => {
+        if (!dayStats[date].items[item.name]) dayStats[date].items[item.name] = 0;
+        dayStats[date].items[item.name] += item.qty;
+      });
+
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <thead>
+          <tr><th colspan="4">${new Date(sale.date).toLocaleString()} - ${sale.method} - 총 ${sale.total.toLocaleString()}원</th></tr>
+          <tr><th>상품명</th><th>수량</th><th>단가</th><th>합계</th></tr>
+        </thead>
+        <tbody>
+          ${sale.items.map(item => `
+            <tr><td>${item.name}</td><td>${item.qty}</td><td>${item.price}</td><td>${item.qty * item.price}</td></tr>
+          `).join('')}
+        </tbody>`;
+      salesList.appendChild(table);
+    });
+
+    const statTable = document.createElement('table');
+    statTable.innerHTML = `
+      <thead>
+        <tr><th>날짜</th><th>총 매출</th><th>판매 상품</th></tr>
+      </thead>
+      <tbody>
+        ${Object.entries(dayStats).map(([date, data]) => {
+          const itemSummary = Object.entries(data.items)
+            .map(([name, qty]) => `${name}(${qty})`)
+            .join(', ');
+          return `<tr><td>${date}</td><td>${data.total.toLocaleString()}원</td><td>${itemSummary}</td></tr>`;
+        }).join('')}
+      </tbody>
+    `;
+    dailyStats.appendChild(statTable);
+  });
+}
+
+
+function showSection(id) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'manage') loadProductsFromFirestore();
+  if (id === 'order') renderOrder();
+  if (id === 'sales') renderSales();
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  showSection('manage');
+});
+</script>
+
 </body>
 </html>
+
