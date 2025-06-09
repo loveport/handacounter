@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -6,36 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HANDA부스</title>
 
-  <!-- ✅ Firebase 스크립트: 중복 제거 및 순서 유지 -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script> 
 
   <style>
     body { font-family: sans-serif; margin: 0; padding: 1rem; background: #e6f2ff; }
     h1 { text-align: center; margin-bottom: 1rem; }
     nav { display: flex; justify-content: center; gap: 1rem; margin-bottom: 1.5rem; }
-    nav 
-button {
-  background-color: white;
-  color: #003366;
-  border: 1px solid #b3d9ff;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: transform 0.1s ease, background-color 0.2s ease;
-}
-button:active {
-  transform: scale(0.96);
-  background-color: #d6ecff;
-}
-
-button:active {
-  transform: scale(0.96);
-  background-color: #d6ecff;
-}
-  touch-action: manipulation; padding: 0.5rem 1rem; font-size: 1rem; }
+    button {
+      background-color: white;
+      color: #003366;
+      border: 1px solid #b3d9ff;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform 0.1s ease, background-color 0.2s ease;
+    }
+    button:active {
+      transform: scale(0.96);
+      background-color: #d6ecff;
+    }
+    button:hover {
+      background-color: #f0f8ff;
+    }
     section { display: none; }
     section.active { display: block; }
     .form-group {
@@ -47,7 +42,6 @@ button:active {
     }
     input, select {
       width: 100%;
-      box-sizing: border-box;
       padding: 0.5rem;
       font-size: 1rem;
       border: 1px solid #ccc;
@@ -65,14 +59,8 @@ button:active {
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
       text-align: center;
     }
-    .product {
-      border: 1px solid #b3d9ff;
-      cursor: pointer;
-      transition: background-color 0.2s, box-shadow 0.2s;
-    }
     .product:hover {
       background-color: #f0f8ff;
-      box-shadow: 0 0 8px rgba(179, 217, 255, 0.5);
     }
     .product-card img, .product img {
       width: 100%;
@@ -82,99 +70,55 @@ button:active {
       margin-bottom: 0.5rem;
     }
     .btn-group { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
-    .cart, .sales {
-      background: #fff;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      margin-top: 1rem;
-    }
-    .cart-items {
-  max-height: 50vh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.cart-item {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-    }
-    .cart-controls 
-button {
-  background-color: white;
-  color: #003366;
-  border: 1px solid #b3d9ff;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: transform 0.1s ease, background-color 0.2s ease;
-}
-button:active {
-  transform: scale(0.96);
-  background-color: #d6ecff;
+.sales {
+  background: white;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  max-width: 800px;
+  margin: 0 auto;
+}  
+
+.cart {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  max-width: 600px;
+  margin: 2rem auto;
 }
 
-button:active {
-  transform: scale(0.96);
-  background-color: #d6ecff;
-}
-  touch-action: manipulation; margin-left: 5px; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 1rem;
-    }
-    th, td { border: 1px solid #ccc; padding: 0.5rem; }
-    th { background: #f0f0f0; }
-    .download-btn {
-      margin: 1rem 0;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-    }
-    
-button {
-  background-color: white;
-  color: #003366;
-  border: 1px solid #b3d9ff;
-  border-radius: 6px;
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: transform 0.1s ease, background-color 0.2s ease;
-}
-button:active {
-  transform: scale(0.96);
-  background-color: #d6ecff;
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
 }
 
-button:active {
-  transform: scale(0.96);
-  background-color: #d6ecff;
+table th, table td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: center;
 }
-  touch-action: manipulation;
-      background-color: white;
-      color: #003366;
-      border: 1px solid #b3d9ff;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    button:hover {
-      background-color: #f0f8ff;
-    }
-    button, .download-btn {
-      font-size: 1rem;
-      padding: 1rem;
-    }
-  
-  section { display: none; }
-  section.active { display: block; }
+
+table thead {
+  background-color: #f0f8ff;
+}
+
+table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+nav, section {
+  display: none;
+}
 </style>
 </head>
 <body>
+<div id="loginBox" style="text-align:center; margin-top: 3rem;">
+  <h2>로그인</h2>
+  <input type="email" id="email" placeholder="이메일" style="padding:0.5rem; width:200px;"><br><br>
+  <input type="password" id="password" placeholder="비밀번호" style="padding:0.5rem; width:200px;"><br><br>
+  <button onclick="login()">로그인</button>
+</div>
   <h1>HANDA부스</h1>
   <nav>
     <button onclick="showSection('manage')">상품 관리</button>
@@ -208,17 +152,18 @@ button:active {
   <section id="sales">
     <div class="sales">
       <h2>매출 내역</h2>
-      <button class="download-btn" onclick="downloadCSV()">CSV 다운로드</button>
-      <button class="download-btn" onclick="resetSales()">매출 초기화</button>
+<div class="form-group" style="text-align: center; margin-bottom: 1rem;">
+  <button onclick="downloadCSV()">CSV 다운로드</button>
+  <button onclick="resetSales()">매출 초기화</button>
+</div>
+
       <div id="salesList"></div>
       <h3>일별 매출 통계</h3>
       <div id="dailyStats"></div>
     </div>
   </section>
 
-  <!-- ✅ JavaScript 로직 포함 -->
-  <script>
-
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyBgtMaVNPSUQ3qQKu7Ted3KoZn_dgdxE4k",
   authDomain: "handacounter.firebaseapp.com",
@@ -229,34 +174,55 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-firebase.firestore().enablePersistence({synchronizeTabs: true})
-  .then(() => console.log("🔥 Firestore 오프라인 캐시 활성화"))
-  .catch(err => console.warn("❗오프라인 캐시 불가:", err.code));
+firebase.firestore().enablePersistence({synchronizeTabs: true});
+
+document.addEventListener("DOMContentLoaded", () => {
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      document.getElementById("loginBox").style.display = "none";
+      document.querySelector("nav").style.display = "flex";
+      showSection("manage");
+      loadProductsFromFirestore?.();
+    } else {
+      document.getElementById("loginBox").style.display = "block";
+      document.querySelector("nav").style.display = "none";
+      document.querySelectorAll("section").forEach(s => s.style.display = "none");
+    }
+  });
+});
+
+function login() {
+  const email = document.getElementById("email").value;
+  const pw = document.getElementById("password").value;
+  firebase.auth().signInWithEmailAndPassword(email, pw)
+    .catch(err => alert("로그인 실패: " + err.message));
+}
 
 let products = [];
 let cart = [];
 let sales = JSON.parse(localStorage.getItem('sales') || '[]');
 let selectedProductIndex = null;
 
+function clearForm() {
+  document.getElementById("name").value = '';
+  document.getElementById("price").value = '';
+  document.getElementById("category").value = '';
+  document.getElementById("stock").value = '';
+  document.getElementById("image").value = '';
+  selectedProductIndex = null;
+}
+
 function showSection(id) {
   document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if (id === 'manage') 
+  if (id === 'manage') loadProductsFromFirestore();
   if (id === 'order') renderOrder();
   if (id === 'sales') renderSales();
 }
 
-
-function renderProducts() { console.log('renderProducts placeholder'); }
-
-function loadProductsFromFirestore() {
-  db.collection("products").get().then(snapshot => {
-    products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    localStorage.setItem('products', JSON.stringify(products));
-    renderProducts();
-    renderOrder();
-  });
-}
+document.addEventListener("DOMContentLoaded", () => {
+  showSection('manage');
+});
 
 function addProduct() {
   const name = document.getElementById("name").value;
@@ -277,17 +243,13 @@ function addProduct() {
         localStorage.setItem('products', JSON.stringify(products));
         selectedProductIndex = null;
         clearForm();
-        
-
-      });
+        });
     } else {
       db.collection('products').add(product).then(docRef => {
         product.id = docRef.id;
         products.push(product);
         localStorage.setItem('products', JSON.stringify(products));
         clearForm();
-        
-
       });
     }
   };
@@ -408,76 +370,70 @@ function completeOrder(method) {
   };
   sales.push(order);
   localStorage.setItem('sales', JSON.stringify(sales));
-  db.collection("sales").add(order);
   cart.forEach(i => {
     const p = products.find(p => p.name === i.name);
     p.stock = parseInt(p.stock) - i.qty;
-    db.collection("products").doc(p.id).update({ stock: p.stock });
+    db.collection('products').doc(p.id).update({ stock: p.stock });
   });
   localStorage.setItem('products', JSON.stringify(products));
   cart = [];
   renderCart();
   renderOrder();
+  loadProductsFromFirestore();
   alert(`결제 완료 (${method})`);
 }
 
-
 function renderSales() {
-  db.collection("sales").get().then(snapshot => {
-    sales = snapshot.docs.map(doc => doc.data());
-    const salesList = document.getElementById('salesList');
-    const dailyStats = document.getElementById('dailyStats');
-    salesList.innerHTML = '';
-    dailyStats.innerHTML = '';
+  sales = JSON.parse(localStorage.getItem('sales') || '[]');
+  const salesList = document.getElementById('salesList');
+  const dailyStats = document.getElementById('dailyStats');
+  salesList.innerHTML = '';
+  dailyStats.innerHTML = '';
 
-    if (!sales.length) {
-      salesList.innerHTML = '<p>매출 내역이 없습니다.</p>';
-      return;
-    }
+  if (!sales.length) {
+    salesList.innerHTML = '<p>매출 내역이 없습니다.</p>';
+    return;
+  }
 
-    const dayStats = {};
-    sales.slice().reverse().forEach(sale => {
-      const date = new Date(sale.date).toLocaleDateString();
+  const dayStats = {};
 
-      if (!dayStats[date]) dayStats[date] = { total: 0, items: {} };
-      dayStats[date].total += sale.total;
-      sale.items.forEach(item => {
-        if (!dayStats[date].items[item.name]) dayStats[date].items[item.name] = 0;
-        dayStats[date].items[item.name] += item.qty;
-      });
+  sales.slice().reverse().forEach(sale => {
+    const date = new Date(sale.date).toLocaleDateString();
 
-      const table = document.createElement('table');
-      table.innerHTML = `
-        <thead>
-          <tr><th colspan="4">${new Date(sale.date).toLocaleString()} - ${sale.method} - 총 ${sale.total.toLocaleString()}원</th></tr>
-          <tr><th>상품명</th><th>수량</th><th>단가</th><th>합계</th></tr>
-        </thead>
-        <tbody>
-          ${sale.items.map(item => `
-            <tr><td>${item.name}</td><td>${item.qty}</td><td>${item.price}</td><td>${item.qty * item.price}</td></tr>
-          `).join('')}
-        </tbody>`;
-      salesList.appendChild(table);
+    if (!dayStats[date]) dayStats[date] = { total: 0, items: {} };
+    dayStats[date].total += sale.total;
+    sale.items.forEach(item => {
+      if (!dayStats[date].items[item.name]) dayStats[date].items[item.name] = 0;
+      dayStats[date].items[item.name] += item.qty;
     });
 
-    const statTable = document.createElement('table');
-    statTable.innerHTML = `
+    const table = document.createElement('table');
+    table.innerHTML = `
       <thead>
-        <tr><th>날짜</th><th>총 매출</th><th>판매 상품</th></tr>
+        <tr><th colspan="4">${new Date(sale.date).toLocaleString()} - ${sale.method} - 총 ${sale.total.toLocaleString()}원</th></tr>
+        <tr><th>상품명</th><th>수량</th><th>단가</th><th>합계</th></tr>
       </thead>
       <tbody>
-        ${Object.entries(dayStats).map(([date, data]) => {
-          const itemSummary = Object.entries(data.items)
-            .map(([name, qty]) => `${name}(${qty})`)
-            .join(', ');
-          return `<tr><td>${date}</td><td>${data.total.toLocaleString()}원</td><td>${itemSummary}</td></tr>`;
-        }).join('')}
-      </tbody>
-    `;
-    dailyStats.appendChild(statTable);
+        ${sale.items.map(item => `
+          <tr><td>${item.name}</td><td>${item.qty}</td><td>${item.price}</td><td>${item.qty * item.price}</td></tr>
+        `).join('')}
+      </tbody>`;
+    salesList.appendChild(table);
   });
-}
 
+  const statTable = document.createElement('table');
+  statTable.innerHTML = `
+    <thead><tr><th>날짜</th><th>총 매출</th><th>판매 상품</th></tr></thead>
+    <tbody>
+      ${Object.entries(dayStats).map(([date, data]) => {
+        const itemSummary = Object.entries(data.items)
+          .map(([name, qty]) => `${name}(${qty})`)
+          .join(', ');
+        return `<tr><td>${date}</td><td>${data.total.toLocaleString()}원</td><td>${itemSummary}</td></tr>`;
+      }).join('')}
+    </tbody>`;
+  dailyStats.appendChild(statTable);
+}
 
 function resetSales() {
   if (confirm("매출 데이터를 초기화하시겠습니까?")) {
@@ -509,6 +465,17 @@ function downloadCSV() {
   URL.revokeObjectURL(url);
 }
 
+function loadProductsFromFirestore() {
+  db.collection('products').get().then(snapshot => {
+    products = [];
+    snapshot.forEach(doc => {
+      products.push({ id: doc.id, ...doc.data() });
+    });
+    localStorage.setItem('products', JSON.stringify(products));
+    renderProducts();
+  });
+}
+
 function editProduct(i) {
   const p = products[i];
   document.getElementById("name").value = p.name;
@@ -531,109 +498,11 @@ function deleteProduct(i) {
 }
 
 
-
-</script>
-
-<script>
-function showSection(id) {
-  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  if (id === 'manage') loadProductsFromFirestore();
-  if (id === 'order') renderOrder();
-  if (id === 'sales') renderSales();
-}
-
 document.addEventListener("DOMContentLoaded", () => {
   showSection('manage');
 });
+loadProductsFromFirestore();
+
 </script>
-
-
-<script>
-function renderProducts() { console.log('renderProducts placeholder'); }
-
-function loadProductsFromFirestore() {
-  const data = localStorage.getItem("products");
-  products = data ? JSON.parse(data) : [];
-  renderProducts();
-}
-
-function renderOrder() {
-  // placeholder or full definition if required
-  console.log("renderOrder called");
-}
-
-
-function renderSales() {
-  db.collection("sales").get().then(snapshot => {
-    sales = snapshot.docs.map(doc => doc.data());
-    const salesList = document.getElementById('salesList');
-    const dailyStats = document.getElementById('dailyStats');
-    salesList.innerHTML = '';
-    dailyStats.innerHTML = '';
-
-    if (!sales.length) {
-      salesList.innerHTML = '<p>매출 내역이 없습니다.</p>';
-      return;
-    }
-
-    const dayStats = {};
-    sales.slice().reverse().forEach(sale => {
-      const date = new Date(sale.date).toLocaleDateString();
-
-      if (!dayStats[date]) dayStats[date] = { total: 0, items: {} };
-      dayStats[date].total += sale.total;
-      sale.items.forEach(item => {
-        if (!dayStats[date].items[item.name]) dayStats[date].items[item.name] = 0;
-        dayStats[date].items[item.name] += item.qty;
-      });
-
-      const table = document.createElement('table');
-      table.innerHTML = `
-        <thead>
-          <tr><th colspan="4">${new Date(sale.date).toLocaleString()} - ${sale.method} - 총 ${sale.total.toLocaleString()}원</th></tr>
-          <tr><th>상품명</th><th>수량</th><th>단가</th><th>합계</th></tr>
-        </thead>
-        <tbody>
-          ${sale.items.map(item => `
-            <tr><td>${item.name}</td><td>${item.qty}</td><td>${item.price}</td><td>${item.qty * item.price}</td></tr>
-          `).join('')}
-        </tbody>`;
-      salesList.appendChild(table);
-    });
-
-    const statTable = document.createElement('table');
-    statTable.innerHTML = `
-      <thead>
-        <tr><th>날짜</th><th>총 매출</th><th>판매 상품</th></tr>
-      </thead>
-      <tbody>
-        ${Object.entries(dayStats).map(([date, data]) => {
-          const itemSummary = Object.entries(data.items)
-            .map(([name, qty]) => `${name}(${qty})`)
-            .join(', ');
-          return `<tr><td>${date}</td><td>${data.total.toLocaleString()}원</td><td>${itemSummary}</td></tr>`;
-        }).join('')}
-      </tbody>
-    `;
-    dailyStats.appendChild(statTable);
-  });
-}
-
-
-function showSection(id) {
-  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  if (id === 'manage') loadProductsFromFirestore();
-  if (id === 'order') renderOrder();
-  if (id === 'sales') renderSales();
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  showSection('manage');
-});
-</script>
-
 </body>
 </html>
-
