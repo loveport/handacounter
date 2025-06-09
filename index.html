@@ -369,19 +369,21 @@ function completeOrder(method) {
     date: new Date().toISOString()
   };
   db.collection("sales").add(order).then(() => {
-    cart.forEach(i => {
-      const p = products.find(p => p.name === i.name);
-      p.stock = parseInt(p.stock) - i.qty;
-      db.collection('products').doc(p.id).update({ stock: p.stock });
-    });
-});
+  const updatePromises = cart.map(i => {
+    const p = products.find(p => p.name === i.name);
+    p.stock = parseInt(p.stock) - i.qty;
+    return db.collection('products').doc(p.id).update({ stock: p.stock });
+  });
 
-    localStorage.setItem('products', JSON.stringify(products));
+Promise.all(updatePromises).then(() => {
   cart = [];
   renderCart();
-  renderOrder();
-  loadProductsFromFirestore();
-  alert(`결제 완료 (${method})`);
+  loadProductsFromFirestore().then(() => {
+    renderOrder(); 
+    alert(`결제 완료 (${method})`);
+      });
+    });
+  });
 }
 
 function renderSales() {
@@ -478,7 +480,7 @@ function downloadCSV() {
 }
 
 function loadProductsFromFirestore() {
-  db.collection('products').get().then(snapshot => {
+  return db.collection('products').get().then(snapshot => {
     products = [];
     snapshot.forEach(doc => {
       products.push({ id: doc.id, ...doc.data() });
