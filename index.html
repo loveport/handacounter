@@ -368,14 +368,15 @@ function completeOrder(method) {
     method,
     date: new Date().toISOString()
   };
-  sales.push(order);
-  localStorage.setItem('sales', JSON.stringify(sales));
-  cart.forEach(i => {
-    const p = products.find(p => p.name === i.name);
-    p.stock = parseInt(p.stock) - i.qty;
-    db.collection('products').doc(p.id).update({ stock: p.stock });
-  });
-  localStorage.setItem('products', JSON.stringify(products));
+  db.collection("sales").add(order).then(() => {
+    cart.forEach(i => {
+      const p = products.find(p => p.name === i.name);
+      p.stock = parseInt(p.stock) - i.qty;
+      db.collection('products').doc(p.id).update({ stock: p.stock });
+    });
+});
+
+    localStorage.setItem('products', JSON.stringify(products));
   cart = [];
   renderCart();
   renderOrder();
@@ -384,64 +385,75 @@ function completeOrder(method) {
 }
 
 function renderSales() {
-  sales = JSON.parse(localStorage.getItem('sales') || '[]');
   const salesList = document.getElementById('salesList');
   const dailyStats = document.getElementById('dailyStats');
   salesList.innerHTML = '';
   dailyStats.innerHTML = '';
+  sales = [];
 
-  if (!sales.length) {
-    salesList.innerHTML = '<p>매출 내역이 없습니다.</p>';
-    return;
-  }
+  db.collection("sales").orderBy("date").get().then(snapshot => {
+    if (snapshot.empty) {
+      salesList.innerHTML = '<p>매출 내역이 없습니다.</p>';
+      return;
+    }
 
-  const dayStats = {};
+    const dayStats = {};
 
-  sales.slice().reverse().forEach(sale => {
-    const date = new Date(sale.date).toLocaleDateString();
+    snapshot.forEach(doc => {
+      const sale = doc.data();
+      sales.push(sale); // 전역 sales 배열 유지
 
-    if (!dayStats[date]) dayStats[date] = { total: 0, items: {} };
-    dayStats[date].total += sale.total;
-    sale.items.forEach(item => {
-      if (!dayStats[date].items[item.name]) dayStats[date].items[item.name] = 0;
-      dayStats[date].items[item.name] += item.qty;
+      const date = new Date(sale.date).toLocaleDateString();
+
+      if (!dayStats[date]) dayStats[date] = { total: 0, items: {} };
+      dayStats[date].total += sale.total;
+      sale.items.forEach(item => {
+        if (!dayStats[date].items[item.name]) dayStats[date].items[item.name] = 0;
+        dayStats[date].items[item.name] += item.qty;
+      });
+
+      const table = document.createElement('table');
+      table.innerHTML = `
+        <thead>
+          <tr><th colspan="4">${new Date(sale.date).toLocaleString()} - ${sale.method} - 총 ${sale.total.toLocaleString()}원</th></tr>
+          <tr><th>상품명</th><th>수량</th><th>단가</th><th>합계</th></tr>
+        </thead>
+        <tbody>
+          ${sale.items.map(item => `
+            <tr><td>${item.name}</td><td>${item.qty}</td><td>${item.price}</td><td>${item.qty * item.price}</td></tr>
+          `).join('')}
+        </tbody>`;
+      salesList.appendChild(table);
     });
 
-    const table = document.createElement('table');
-    table.innerHTML = `
-      <thead>
-        <tr><th colspan="4">${new Date(sale.date).toLocaleString()} - ${sale.method} - 총 ${sale.total.toLocaleString()}원</th></tr>
-        <tr><th>상품명</th><th>수량</th><th>단가</th><th>합계</th></tr>
-      </thead>
+    const statTable = document.createElement('table');
+    statTable.innerHTML = `
+      <thead><tr><th>날짜</th><th>총 매출</th><th>판매 상품</th></tr></thead>
       <tbody>
-        ${sale.items.map(item => `
-          <tr><td>${item.name}</td><td>${item.qty}</td><td>${item.price}</td><td>${item.qty * item.price}</td></tr>
-        `).join('')}
+        ${Object.entries(dayStats).map(([date, data]) => {
+          const itemSummary = Object.entries(data.items)
+            .map(([name, qty]) => `${name}(${qty})`)
+            .join(', ');
+          return `<tr><td>${date}</td><td>${data.total.toLocaleString()}원</td><td>${itemSummary}</td></tr>`;
+        }).join('')}
       </tbody>`;
-    salesList.appendChild(table);
+    dailyStats.appendChild(statTable);
   });
-
-  const statTable = document.createElement('table');
-  statTable.innerHTML = `
-    <thead><tr><th>날짜</th><th>총 매출</th><th>판매 상품</th></tr></thead>
-    <tbody>
-      ${Object.entries(dayStats).map(([date, data]) => {
-        const itemSummary = Object.entries(data.items)
-          .map(([name, qty]) => `${name}(${qty})`)
-          .join(', ');
-        return `<tr><td>${date}</td><td>${data.total.toLocaleString()}원</td><td>${itemSummary}</td></tr>`;
-      }).join('')}
-    </tbody>`;
-  dailyStats.appendChild(statTable);
 }
 
 function resetSales() {
-  if (confirm("매출 데이터를 초기화하시겠습니까?")) {
-    localStorage.removeItem("sales");
-    sales = [];
-    renderSales();
-    alert("매출이 초기화되었습니다.");
-  }
+  if (!confirm("매출을 초기화하시겠습니까?")) return;
+
+  db.collection("sales").get().then(snapshot => {
+    const batch = db.batch();
+    snapshot.forEach(doc => batch.delete(doc.ref));
+
+    batch.commit().then(() => {
+      sales = [];
+      renderSales();
+      alert("매출이 초기화되었습니다.");
+    });
+  });
 }
 
 function downloadCSV() {
