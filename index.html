@@ -110,6 +110,12 @@ table tr:nth-child(even) {
 nav, section {
   display: none;
 }
+
+button.equal {
+  background-color: #7ecdff;
+  color: white;
+  font-weight: bold;
+}
 </style>
 </head>
 <body>
@@ -124,6 +130,7 @@ nav, section {
     <button onclick="showSection('manage')">상품 관리</button>
     <button onclick="showSection('order')">주문 처리</button>
     <button onclick="showSection('sales')">매출 관리</button>
+    <button onclick="showSection('calculator')">계산기</button>
   </nav>
 
   <section id="manage" class="active">
@@ -162,6 +169,39 @@ nav, section {
       <div id="dailyStats"></div>
     </div>
   </section>
+
+<section id="calculator" style="margin-top: 2rem; text-align: center;">
+  <h2>계산기</h2>
+  <input id="calcDisplay" type="text" readonly style="width: 200px; height: 40px; font-size: 20px; text-align: right; margin-bottom: 10px;" />
+<div id="calcResult" style="font-size: 18px; margin-bottom: 10px; color: gray;"></div>
+  <div style="display: grid; grid-template-columns: repeat(4, 50px); gap: 5px; justify-content: center;">
+
+    <button disabled style="visibility: hidden;"></button>
+    <button disabled style="visibility: hidden;"></button>    
+    <button onclick="clearCalc()" style="height: 35px; width: 50px; font-size: 13px; padding: 0;">Clear</button>
+    <button onclick="backspace()" style="height: 35px; width: 50px;">←</button>
+
+    <button onclick="press('7')">7</button>
+    <button onclick="press('8')">8</button>
+    <button onclick="press('9')">9</button>
+    <button onclick="press('/')">÷</button>
+
+    <button onclick="press('4')">4</button>
+    <button onclick="press('5')">5</button>
+    <button onclick="press('6')">6</button>
+    <button onclick="press('*')">×</button>
+
+    <button onclick="press('1')">1</button>
+    <button onclick="press('2')">2</button>
+    <button onclick="press('3')">3</button>
+    <button onclick="press('-')">−</button>
+
+    <button onclick="press('0')">0</button>
+    <button onclick="press('.')">.</button>
+    <button class="equal" onclick="calculate()">=</button>
+    <button onclick="press('+')">+</button>
+  </div>
+</section>
 
 <script>
 const firebaseConfig = {
@@ -516,6 +556,52 @@ document.addEventListener("DOMContentLoaded", () => {
   showSection('manage');
 });
 loadProductsFromFirestore();
+
+let calcInput = '';
+
+function press(val) {
+  calcInput += val;
+  document.getElementById('calcDisplay').value = calcInput;
+
+  try {
+    const result = eval(calcInput);
+    document.getElementById('calcResult').innerText = "= " + result.toLocaleString();
+  } catch {
+    document.getElementById('calcResult').innerText = "";
+  }
+}
+
+function calculate() {
+  try {
+    const result = eval(calcInput);
+    document.getElementById('calcDisplay').value = result;
+    calcInput = result.toString();  // 결과 유지
+    document.getElementById('calcResult').innerText = '';  // 미리보기 초기화
+  } catch (e) {
+    alert('잘못된 계산식입니다.');
+    calcInput = '';
+    document.getElementById('calcDisplay').value = '';
+    document.getElementById('calcResult').innerText = '';
+  }
+}
+
+function clearCalc() {
+  calcInput = '';
+  document.getElementById('calcDisplay').value = '';
+  document.getElementById('calcResult').innerText = '';
+}
+
+function backspace() {
+  calcInput = calcInput.slice(0, -1);
+  document.getElementById('calcDisplay').value = calcInput;
+
+  try {
+    const result = eval(calcInput);
+    document.getElementById('calcResult').innerText = "= " + result.toLocaleString();
+  } catch {
+    document.getElementById('calcResult').innerText = '';
+  }
+}
 
 </script>
 </body>
