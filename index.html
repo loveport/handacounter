@@ -527,13 +527,14 @@ function downloadCSV() {
 }
 
 function loadProductsFromFirestore() {
-  return db.collection('products').get().then(snapshot => {
+  db.collection('products').onSnapshot(snapshot => {
     products = [];
     snapshot.forEach(doc => {
       products.push({ id: doc.id, ...doc.data() });
     });
-    localStorage.setItem('products', JSON.stringify(products));
+
     renderProducts();
+    renderOrder();   
   });
 }
 
